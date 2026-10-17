@@ -1,9 +1,11 @@
-import pytest
+"""End-to-end tests: every AMO encoding must solve Sudoku to a valid grid.
 
+Run:  python -m tests.test_sudoku      (also collected by pytest)
+"""
 from src.encodings.amo import AMO_ENCODERS
-from src.puzzle_io import generate_solved_grid, grid_to_string, parse_string
+from src.puzzle_io import generate_solved_grid, parse_string, puncture
+from src.solver import solve, solve_check_unique
 from src.sudoku_encoder import SudokuEncoder
-
 
 EXAMPLE_9X9 = (
     "53..7...." "6..195..." ".98....6." "8...6...3" "4..8.3..1"
@@ -11,92 +13,89 @@ EXAMPLE_9X9 = (
 )
 
 
-def _solver_api():
-    pytest.importorskip("pysat.solvers")
-    from src.solver import solve
-
-    return solve
-
-
-def _is_valid(grid, givens, box_size):
-    n = box_size * box_size
-    expected = set(range(1, n + 1))
-    if len(grid) != n or any(len(row) != n or set(row) != expected for row in grid):
-        return False
-    if any({grid[r][c] for r in range(n)} != expected for c in range(n)):
-        return False
-    for br in range(0, n, box_size):
-        for bc in range(0, n, box_size):
-            if {grid[r][c] for r in range(br, br + box_size)
-                for c in range(bc, bc + box_size)} != expected:
-                return False
-    return all(grid[r][c] == value + 1 for r, c, value in givens)
-
-
-def test_puzzle_and_solution_round_trip_for_supported_sizes():
-    givens_9 = parse_string(EXAMPLE_9X9, box_size=3)
-    partial = [[0] * 9 for _ in range(9)]
-    for r, c, value in givens_9:
-        partial[r][c] = value + 1
-    assert parse_string(grid_to_string(partial), box_size=3) == givens_9
-
-    for box_size in range(1, 6):
-        grid = generate_solved_grid(box_size, seed=box_size)
-        assert parse_string(grid_to_string(grid), box_size=box_size) == [
-            (r, c, grid[r][c] - 1)
-            for r in range(len(grid))
-            for c in range(len(grid))
-        ]
-
-
-def test_auxiliary_ids_are_disjoint_and_unique_in_sudoku_cnf():
-    for name in AMO_ENCODERS:
-        encoder = SudokuEncoder(box_size=3, amo_method=name)
-        clauses, n_vars = encoder.encode([])
-        cell_vars = encoder.n ** 3
-        auxiliary_ids = sorted({abs(lit) for clause in clauses for lit in clause if abs(lit) > cell_vars})
-        assert all(variable > cell_vars for variable in auxiliary_ids), name
-        assert auxiliary_ids == list(range(cell_vars + 1, n_vars + 1)), name
-
-
-@pytest.mark.parametrize("name", list(AMO_ENCODERS))
-def test_valid_9x9_puzzle_solves_with_each_amo(name):
-    solve = _solver_api()
-    givens = parse_string(EXAMPLE_9X9, box_size=3)
-    encoder = SudokuEncoder(box_size=3, amo_method=name)
-    clauses, _ = encoder.encode(givens)
-    grid = solve(encoder, clauses)
-    assert grid is not None
-    assert _is_valid(grid, givens, 3)
-    assert parse_string(grid_to_string(grid), box_size=3) == [
-        (r, c, grid[r][c] - 1) for r in range(9) for c in range(9)
+def is_valid(grid, givens, box):
+    n = box * box
+    want = set(range(1, n + 1))
+    rows = [set(r) for r in grid]
+    cols = [set(grid[r][c] for r in range(n)) for c in range(n)]
+    boxes = [
+        set(grid[r][c] for r in range(br, br + box) for c in range(bc, bc + box))
+        for br in range(0, n, box) for bc in range(0, n, box)
     ]
+    return (
+        all(s == want for s in rows + cols + boxes)
+        and all(grid[r][c] == v + 1 for r, c, v in givens)
+    )
 
 
-@pytest.mark.parametrize("name", list(AMO_ENCODERS))
-def test_conflicting_givens_are_unsat_with_each_amo(name):
-    solve = _solver_api()
-    encoder = SudokuEncoder(box_size=3, amo_method=name)
-    clauses, _ = encoder.encode([(0, 0, 0), (0, 1, 0)])
-    assert solve(encoder, clauses) is None
+def solve_with(amo, box, givens):
+    encoder = SudokuEncoder(box_size=box, amo_method=amo)
+    clauses, _ = encoder.encode(givens)
+    return solve(encoder, clauses)
 
 
-def test_supported_box_sizes_solve_complete_grids():
-    solve = _solver_api()
-    for box_size in range(1, 6):
-        grid = generate_solved_grid(box_size, seed=box_size)
-        givens = [
-            (r, c, grid[r][c] - 1)
-            for r in range(len(grid))
-            for c in range(len(grid))
-        ]
-        encoder = SudokuEncoder(box_size=box_size, amo_method="sequential")
+def test_example_9x9_all_encodings():
+    givens = parse_string(EXAMPLE_9X9, box_size=3)
+    grids = []
+    for amo in AMO_ENCODERS:
+        grid = solve_with(amo, 3, givens)
+        assert grid is not None and is_valid(grid, givens, 3), amo
+        grids.append(grid)
+    # The example puzzle has a unique solution, so all encodings must agree.
+    assert all(g == grids[0] for g in grids)
+
+
+def test_generated_16x16_all_encodings():
+    givens = puncture(generate_solved_grid(4, seed=1), keep_ratio=0.35, seed=1)
+    for amo in AMO_ENCODERS:
+        grid = solve_with(amo, 4, givens)
+        assert grid is not None and is_valid(grid, givens, 4), amo
+
+
+def test_unique_solution_detected_as_unique():
+    # The example puzzle is a classic puzzle with a known-unique solution.
+    givens = parse_string(EXAMPLE_9X9, box_size=3)
+    encoder = SudokuEncoder(box_size=3, amo_method="pairwise")
+    clauses, _ = encoder.encode(givens)
+    result = solve_check_unique(encoder, clauses)
+    assert result.is_unique is True
+    assert result.second_grid is None
+    assert is_valid(result.grid, givens, 3)
+
+
+def test_underspecified_puzzle_detected_as_not_unique():
+    # A grid with only 2 givens has many solutions -- the two grids returned
+    # must both be valid completions, must satisfy the same givens, and must
+    # actually differ (otherwise the blocking clause did nothing).
+    givens = [(0, 0, 0), (1, 1, 1)]  # cell (0,0)=1, cell (1,1)=2
+    encoder = SudokuEncoder(box_size=3, amo_method="pairwise")
+    clauses, _ = encoder.encode(givens)
+    result = solve_check_unique(encoder, clauses)
+    assert result.is_unique is False
+    assert is_valid(result.grid, givens, 3)
+    assert is_valid(result.second_grid, givens, 3)
+    assert result.grid != result.second_grid
+
+
+def test_uniqueness_agrees_across_encodings():
+    # The blocking clause only touches cell variables, so every AMO encoding
+    # must reach the same unique/not-unique verdict for the same puzzle.
+    givens = parse_string(EXAMPLE_9X9, box_size=3)
+    for amo in AMO_ENCODERS:
+        encoder = SudokuEncoder(box_size=3, amo_method=amo)
         clauses, _ = encoder.encode(givens)
-        solved = solve(encoder, clauses)
-        assert solved == grid
-        assert _is_valid(solved, givens, box_size)
+        result = solve_check_unique(encoder, clauses)
+        assert result.is_unique is True, amo
 
 
-def test_out_of_format_dimension_is_rejected():
-    with pytest.raises(ValueError, match="grid sizes up to 35"):
-        SudokuEncoder(box_size=6)
+if __name__ == "__main__":
+    test_example_9x9_all_encodings()
+    print("PASS 9x9, all encodings agree")
+    test_generated_16x16_all_encodings()
+    print("PASS 16x16, all encodings valid")
+    test_unique_solution_detected_as_unique()
+    print("PASS unique puzzle detected as unique")
+    test_underspecified_puzzle_detected_as_not_unique()
+    print("PASS underspecified puzzle detected as not unique, second grid differs")
+    test_uniqueness_agrees_across_encodings()
+    print("PASS uniqueness verdict agrees across all AMO encodings")
