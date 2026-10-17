@@ -1,14 +1,19 @@
 """Read/write Sudoku puzzles and generate larger ones for scaling benchmarks."""
 import random
+import math
 from typing import List, Tuple
 
 Givens = List[Tuple[int, int, int]]
 
 
 def parse_string(text: str, box_size: int = 3) -> Givens:
-    """Parse a flattened, row-major puzzle string ('.' or '0' = blank) into
-    0-indexed givens (r, c, v). Uses base-36 digits so values above 9 work
-    for 16x16 / 25x25 grids (0-9, then a-z)."""
+    """Parse row-major cells into 0-indexed (row, column, value) clues.
+
+    ``.`` is the canonical blank marker; ``0`` is accepted as a legacy blank
+    marker. Values 1-9 use ``1``-``9`` and values 10-35 use ``a``-``z``.
+    Whitespace between cells is ignored.
+    """
+    _validate_box_size(box_size)
     n = box_size * box_size
     chars = [ch for ch in text if not ch.isspace()]
     if len(chars) != n * n:
@@ -19,17 +24,47 @@ def parse_string(text: str, box_size: int = 3) -> Givens:
         if ch in (".", "0"):
             continue
         r, c = divmod(i, n)
-        givens.append((r, c, int(ch, 36) - 1))
+        try:
+            value = int(ch, 36)
+        except ValueError as exc:
+            raise ValueError(f"Invalid cell symbol {ch!r} at row {r + 1}, column {c + 1}") from exc
+        if not 1 <= value <= n:
+            raise ValueError(
+                f"Cell symbol {ch!r} at row {r + 1}, column {c + 1} represents {value}; "
+                f"expected a value from 1 to {n} or a blank marker '.'/'0'"
+            )
+        givens.append((r, c, value - 1))
     return givens
 
 
 _DIGITS = "0123456789abcdefghijklmnopqrstuvwxyz"
 
 
+def _validate_box_size(box_size: int) -> None:
+    if isinstance(box_size, bool) or not isinstance(box_size, int) or box_size <= 0:
+        raise ValueError("box_size must be a positive integer")
+    n = box_size * box_size
+    if n > 35:
+        raise ValueError("base-36 puzzle format supports grid sizes up to 35 (box_size up to 5)")
+
+
 def grid_to_string(grid: List[List[int]]) -> str:
-    """Inverse of parse_string: value v -> _DIGITS[v], matching int(ch, 36) - 1
-    used when reading givens, so a cell round-trips through the same char."""
+    """Serialize a square puzzle grid using ``.`` for blanks and base-36 values.
+
+    Grid values are 1-based (0 means blank); the serialized form parses back
+    to 0-based clues.
+    """
+    if not grid or any(not isinstance(row, list) or len(row) != len(grid) for row in grid):
+        raise ValueError("grid must be a non-empty square list of rows")
+    n = len(grid)
+    box_size = math.isqrt(n)
+    if box_size * box_size != n:
+        raise ValueError("grid dimension must be a perfect square (box_size squared)")
+    _validate_box_size(box_size)
+
     def enc(v: int) -> str:
+        if isinstance(v, bool) or not isinstance(v, int) or not 0 <= v <= n:
+            raise ValueError(f"grid values must be integers from 0 to {n}")
         return "." if v == 0 else _DIGITS[v]
 
     return "\n".join("".join(enc(v) for v in row) for row in grid)

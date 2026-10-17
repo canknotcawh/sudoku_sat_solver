@@ -5,6 +5,7 @@ from typing import Callable, List
 
 Clause = List[int]
 Literals = List[int]
+Lits = Literals
 
 def amo_pairwise(lits: Lits, new_var: Callable[[], int] = None) -> List[Clause]:
     """O(n^2) clauses, no auxiliary variables. Simple and fine for small groups (n=9)."""
@@ -35,6 +36,8 @@ def amo_commander(lits: Lits, new_var: Callable[[], int], group_size: int = 3) -
     """Commander encoding (Klieber & Kwon, 2007): recursive grouping, one commander
     literal per group, AMO enforced within each group and recursively across
     commanders. group_size is a tunable trade-off between clause count and depth."""
+    if isinstance(group_size, bool) or not isinstance(group_size, int) or group_size < 2:
+        raise ValueError("group_size must be an integer greater than or equal to 2")
     if len(lits) <= 1:
         return []
     if len(lits) <= group_size:

@@ -10,8 +10,9 @@ from src.sudoku_encoder import SudokuEncoder
 
 def main():
     ap = argparse.ArgumentParser(description="SAT-based Sudoku solver (PySAT)")
-    ap.add_argument("puzzle_file", help="Path to a puzzle text file (row-major, '.' or '0' = blank)")
-    ap.add_argument("--box", type=int, default=3, help="Box size: 3 -> 9x9, 4 -> 16x16, 5 -> 25x25 ...")
+    ap.add_argument("puzzle_file", help="Row-major puzzle text; '.' is blank ('0' is also accepted)")
+    ap.add_argument("--box", type=int, default=3,
+                     help="Box size: 3 -> 9x9, 4 -> 16x16, 5 -> 25x25 (maximum supported)")
     ap.add_argument("--amo", default="pairwise", choices=list(AMO_ENCODERS))
     ap.add_argument("--solver", default="cadical195", help="PySAT solver name")
     ap.add_argument("--check-unique", action="store_true",
@@ -21,12 +22,13 @@ def main():
 
     with open(args.puzzle_file) as f:
         text = f.read()
-    givens = parse_string(text, box_size=args.box)
-
-    encoder = SudokuEncoder(box_size=args.box, amo_method=args.amo)
-
     t0 = time.time()
-    clauses, n_vars = encoder.encode(givens)
+    try:
+        givens = parse_string(text, box_size=args.box)
+        encoder = SudokuEncoder(box_size=args.box, amo_method=args.amo)
+        clauses, n_vars = encoder.encode(givens)
+    except ValueError as exc:
+        ap.error(str(exc))
     t_encode = time.time() - t0
 
     print(f"# amo={args.amo} solver={args.solver} vars={n_vars} clauses={len(clauses)} "

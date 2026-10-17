@@ -41,13 +41,10 @@ def solve_check_unique(
     solver to solve again on the same instance. If it comes back UNSAT, no
     other model exists, so the first one was unique.
 
-    The blocking clause only needs to negate the n^3 cell variables p(r,c,v)
-    (one of the var(r,c,v) literals must flip for the grid to actually
-    differ) — auxiliary variables introduced by sequential/commander/binary/
-    product AMO encodings are functions of those, not independent choices,
-    so leaving them out of the blocking clause still blocks exactly this one
-    grid, not fewer. This also means the check works the same way regardless
-    of which AMO encoding produced `clauses`.
+    The blocking clause only needs to negate the n^3 cell variables p(r,c,v):
+    any different grid must change at least one selected cell value. Auxiliary
+    variables are intentionally omitted, even when an encoding admits multiple
+    auxiliary assignments for the same grid.
 
     Uses one incremental solver instance (`add_clause` + solve again) so the
     second call reuses learned clauses instead of starting from scratch.
