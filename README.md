@@ -46,6 +46,11 @@ as a CLI error. `python3 main.py --help` shows the supported CLI options.
 - `--solver NAME`: PySAT solver, default `cadical195`. The benchmark uses
   `cadical195`, `glucose42`, `kissat404` and `minisat22`.
 - `--check-unique`: after solving, check whether the solution is unique.
+- `--stream`: yield CNF clauses directly into PySAT instead of retaining the
+  complete Python clause list. Output reports clause generation (`encode`) and
+  PySAT insertion (`solver_load`) separately. This mode currently does not
+  support `--check-unique`; omit `--stream` for uniqueness checks or callers
+  that need the materialized CNF.
 - `--no-unit-alo`: drop the redundant "at least once" clauses of rows, columns and boxes.
 
 ```bash
