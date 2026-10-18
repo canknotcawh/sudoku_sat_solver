@@ -6,8 +6,9 @@ encodings, solves it with PySAT solvers, and compares against ILP/CP baselines
 
 ## Install and run
 
-Python **3.12 or 3.13** is recommended. The environment used for the benchmark
-(Python and library versions, CPU, platform) is recorded in `results/meta.json`.
+Python **3.12** is the CI test target in `tests.yml`. The recorded benchmark
+environment used Python **3.14.4**; that metadata describes the experiment
+environment and is not a claim that every dependency is supported on 3.14.
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -28,6 +29,18 @@ records those runs as `status = license_limit` (not as a solver failure, and not
 as a time), and the tables mark them "licence cap". A baseline whose library is
 not installed is recorded as `missing_library` and its tests are skipped. A full
 academic or commercial licence removes the cap.
+
+Baseline status mapping prefers solver API values. Gurobi size-limit errors use
+`GRB.ERROR_SIZE_LIMIT_EXCEEDED`; CPLEX MIP uses DOcplex's
+`DOcplexLimitsExceeded` exception or CPLEX status codes (including 1016);
+CPLEX CP uses the narrowly observed typed 1016 diagnostic because its docplex
+exception does not expose a numeric code. Other exceptions retain solver,
+version, API status and the original message and remain `error`. CP-SAT
+`UNKNOWN`, CPLEX CP's generic `SearchStoppedByLimit`, and CBC/PuLP `Not Solved`
+do not establish a timeout reason, so they are recorded as `error` with the
+available API detail. A missing optional Python library continues to produce
+`missing_library`; a missing external executable is reported as an error by
+the adapter, with its original message.
 
 From the repository root, solve the included example:
 
@@ -108,6 +121,11 @@ encodes larger grids (up to 64×64) without saving them as files.
 ```bash
 python3 -m src.benchmark --boxes 3 4 5 6 --puzzles 3 --timeout 60 --out results/results.csv
 python3 -m src.benchmark --only size --out results/results.csv
+# Explicit seeds/densities; first 3 seeds tune configurations, remaining seeds are held out:
+python3 -m src.benchmark --boxes 3 4 5 6 --seeds 10 11 12 20 21 22 23 --tune-count 3 \
+  --keep-ratios 0.35 0.45 --timeout 60 --out results/results.csv
+# Start a separate run even when the benchmark configuration is unchanged:
+python3 -m src.benchmark --only size --new-run --out results/results.csv
 ```
 
 Experiments (selected with `--only`, default `sat ablation baseline`):
@@ -120,30 +138,85 @@ Experiments (selected with `--only`, default `sat ablation baseline`):
   without solving. `pairwise` is skipped at the largest sizes because the clause
   list does not fit in memory.
 
-Puzzles are generated from fixed seeds (`box * 1000 + puzzle index`) and
-punctured at a 0.4 keep ratio by default (`--keep-ratio`). A punctured grid is
-guaranteed to have at least the generated completion, but is **not guaranteed to
-have a unique solution**. This is acceptable for measuring solve time; use
-`--check-unique` to test a particular puzzle.
+The default solver matrix (`--boxes 3 4 5 6`) solves 9×9 through 36×36
+puzzles. The `size` experiment uses `--size-boxes` and only measures encoding;
+its default range reaches 64×64. Encode-only rows are not solve results. The
+single-puzzle CLI uses the text format and supports solving grids through
+25×25; its format limit does not change the benchmark's generated-puzzle path.
 
-Every job runs in its own process so a hard instance can be killed at the time
-limit. Rows are appended to the CSV as soon as they finish, and re-running the
-same command with the same `--out` skips jobs already present (resume). Note that
-`missing_library` rows count as done: after installing an extra library, delete
-those rows from the CSV before re-running so the jobs are repeated.
+Puzzles are generated from explicit seeds (`--seeds`) or, for compatibility,
+`box * 1000 + puzzle index`, and punctured at a 0.4 keep ratio by default.
+`--keep-ratios` accepts several clue densities; `--keep-ratio` remains as a
+single-density alias. A generated puzzle always has at least the generated
+completion, but is **not guaranteed to be unique**. By default the records say
+`uniqueness_checked=False` and `uniqueness_status=not_checked`; optional
+`--check-uniqueness` checks each instance once before the benchmark and records
+`unique` or `multiple`. This check may add substantial time on larger grids.
+All methods, SAT solvers, and baselines receive the exact same clue list for a
+given size/seed/density, identified by the per-row full puzzle hash.
 
-The CSV records, per run: experiment, method, solver, `unit_alo`, box and grid
-size, puzzle index, keep ratio, variable and clause counts, `t_encode`,
-`t_solve`, `t_total`, status (`solved`, `timeout`, `license_limit`,
-`missing_library`, `encoded`, ...) and whether the solution was independently
-verified (`valid`). A timeout row is plotted at the time limit; the extra seconds
-in a raw timeout row are only the harness's kill margin.
+Use `--tune-count K` with at least K+1 seeds to label the first K seeds as the
+tuning split and the rest as held-out evaluation. SAT configurations are chosen
+using tuning results and compared on evaluation results. Without a tune split,
+the scripts do not select or label a SAT configuration as best/fastest. The
+encode-only size experiment is marked `descriptive` and is not used for that
+selection.
+
+Every job runs in its own process so a hard instance can be killed at the process
+deadline. Rows are appended to the CSV as soon as they finish. Schema-v4 rows record
+the run ID, configuration hash, source commit, requested and worker timeouts,
+seed, full puzzle SHA-256, split, and uniqueness status. The configuration hash also covers the tracked
+Python/dependency inputs, Python/platform details, package versions, and solver
+probe results. Re-running the same configuration and source with the same `--out`
+resumes that run; a changed timeout, experiment setting, environment, or source
+fingerprint creates a distinct run. `--new-run` forces a fresh run ID even when
+the configuration matches. Results are never deleted by resume.
+
+Older results CSVs use schema v1, v2, or v3. When an older CSV is selected with
+`--out`, it is preserved byte-for-byte and new results are written to a sibling
+`*.v4.csv` file. Older rows are readable by the plotting/audit tool, but are
+not used to skip schema-v4 jobs because they lack complete provenance. Note that
+`missing_library` rows count as done within their run; a different package
+environment creates a different configuration and therefore a separate run.
+
+The time columns are measured as follows:
+
+- `t_encode`: CNF/model construction inside the worker. For baselines this is
+  the baseline module's `t_build`.
+- `t_solve`: SAT solver setup/loading plus solve for SAT; baseline solver-call
+  duration for CP/MIP solvers. A baseline's solver time limit applies to this
+  phase, not to model construction.
+- `t_total`: `t_encode + t_solve` when both phase measurements are returned.
+  For solver-level timeout rows, this is elapsed work and is censored with
+  respect to time-to-solution; it is not a successful solve time.
+- `t_wall`: measured by the parent from worker start through result receipt or
+  deadline. It includes process startup and IPC and is the common time axis for
+  time-to-solution analysis.
+- `solver_timeout_s`: solver-level limit, blank when a solver has no such limit
+  (SAT uses the process deadline).
+- `process_timeout_s`: hard parent deadline. `timeout_s` and `worker_timeout_s`
+  remain as compatibility fields for the requested limit and actual process
+  deadline.
+- `timeout_kind`: `solver`, `process`, `worker_crash`, `worker_error`, or `none`.
+  A process-killed or crashed worker leaves unavailable phase timings blank;
+  the process wall duration remains recorded.
+
+Schema-v4 rows also contain experiment, method, solver, size and puzzle identity,
+status (`solved`, `timeout`, `crashed`, `license_limit`, `missing_library`,
+`encoded`, ...) and `valid`, which independently checks a returned solution.
+Plots treat solver/process timeouts as right-censored at observed `t_wall`, use a
+Kaplan–Meier median when identifiable, and show a lower bound otherwise. They
+do not replace each timeout with a fixed 60-second total. For v1-v3 rows,
+`t_total` is the only available wall-time proxy, so the original timeout cause
+cannot always be recovered.
 
 `results/meta.json` is appended on each invocation with the command, parameters,
 Python and library versions, CPU count, platform, which SAT solvers were usable,
-and the content hash of every puzzle. Puzzles up to 25×25 are also saved in
+and the content hashes/seeds of every puzzle used by that invocation, including
+the encode-only `--size-boxes` instances, densities and uniqueness status. Puzzles up to 25×25 are also saved in
 `results/instances/`. PySAT solvers that cannot be built are recorded there and
-skipped rather than failing the run.
+skipped rather than failing the run. The audit checks schema-v4 row provenance
+against the corresponding run entry in `meta.json`.
 
 Check the data and regenerate the figures and tables from the CSV, without
 running any solver:
@@ -151,15 +224,76 @@ running any solver:
 ```bash
 python3 -m src.plot_results --csv results/results.csv --out results --audit
 python3 -m src.plot_results --csv results/results.csv --out results
+# If an older results.csv caused new runs to be written to its v4 sidecar:
+python3 -m src.plot_results --csv results/results.v4.csv --out results --audit
 ```
 
-`--audit` checks the CSV schema, duplicate job keys, unknown statuses, timing
-consistency, that every `solved` row has `valid=True`, and that the saved
-puzzles match `meta.json` and regenerate from their seeds; it exits with code 1
-on any failure. The second command writes `results/figures/` (PDF and PNG) and
+`--audit` checks supported v1/v2/v3/v4 CSV schemas, duplicate job keys, unknown
+statuses, timing consistency, that every `solved` row has `valid=True`, and that
+the saved puzzles match `meta.json` and regenerate from their seeds. For schema
+v2+ it also checks each row's run ID, configuration hash, seed and puzzle hash;
+v3+ additionally checks split and uniqueness metadata. Schema v4 checks timing
+fields, timeout causes and phase-time consistency. When plotting multiple
+clue densities, pass `--keep-ratio` once per density to avoid combining unlike
+puzzles. Output includes solved/valid and timeout counts, timeout rates,
+Kaplan–Meier medians/bounds, and completed-solve time quartiles.
+It exits with code 1 on any failure. When plotting a schema-v4 CSV containing
+multiple runs, the last run is selected by default; pass `--run-id ID` to select
+another. The plotting command writes `results/figures/` (PDF and PNG) and
 `results/tables/` (CSV and LaTeX). It does not modify the raw CSV, and no result
-is hard-coded in the script. The measured results and their discussion are in
-`results/` and `report/`.
+is hard-coded in the script. The tracked figures and tables are stored in
+`results/`. No `report/` source directory or root `main.pdf` is present in this
+checkout, so a compiled report is not currently available here.
+
+## Large-grid SAT pilot
+
+Use `src.pilot` for a deliberately small, explicit set of solve attempts on
+grids larger than 36×36. It writes a separate append-only schema-v1 file
+(`results/pilot.csv` by default), refuses to append to a file with a different
+header, and checks the selected job count against `--max-jobs` before starting.
+The job count is `puzzles × encodings × solvers` (or just
+`puzzles × encodings` with `--encode-only`). The solver only receives status
+`solved` after `is_valid_solution` validates the returned grid against all
+Sudoku constraints and the clues.
+
+Each row records encode, solver, total and process wall time. `peak_rss_mb` is
+the worker's sampled Linux `/proc/<pid>/status` `VmHWM`; `rss_available` is
+false and the value is blank when the OS does not expose that measurement.
+`--memory-limit-mb` applies an additional per-worker virtual address-space
+allowance (`RLIMIT_AS`), not a promise of an exact physical-RSS cap. On an
+unsupported platform the job is recorded as an error with an explanatory
+message. A worker allocation failure is `memory_limit`; reaching the wall
+deadline is `timeout`; a no-solver run is `encoding_only`; invalid/missing
+solutions and other failures are `error`.
+
+The pairwise AMO encoding has quadratic growth in each unit. The cell, row,
+column and box AMO groups together contribute approximately
+`4 n² * choose(n, 2)` pairwise clauses, where `n=box²`: about 11.3 million at
+49×49 and 33.0 million at 64×64, before ALO/given clauses. The 64×64
+pairwise instance can therefore consume substantial memory when materialized
+as Python lists. These counts are scaling estimates, not evidence that another
+encoding solves faster. Start with one puzzle and a small set of encodings and
+solvers; do not infer comparative performance from a single pilot.
+
+Example commands (not run automatically):
+
+```bash
+# One 49x49 puzzle, one encoding/solver pair, 2-minute process deadline,
+# and an extra 4 GiB virtual-address-space allowance for the worker.
+python3 -m src.pilot --box 7 --puzzles 1 --seeds 1701 \
+  --encoding product --solver cadical195 --timeout 120 \
+  --memory-limit-mb 4096 --max-jobs 1 --out results/pilot-49.csv
+
+# Compare a few explicitly selected configurations on the exact same puzzle.
+python3 -m src.pilot --box 7 --puzzles 1 --seeds 1701 \
+  --encoding sequential product --solver cadical195 glucose42 \
+  --timeout 180 --memory-limit-mb 8192 --max-jobs 4 --out results/pilot-49.csv
+
+# Safest initial scaling check: encode only, without launching a solver.
+python3 -m src.pilot --box 8 --puzzles 1 --seeds 1801 \
+  --encoding sequential product --encode-only --timeout 180 \
+  --memory-limit-mb 8192 --max-jobs 2 --out results/pilot-64-encode.csv
+```
 
 ## Repository layout
 
@@ -173,19 +307,28 @@ src/
   solver.py                  # PySAT solving and uniqueness check
   puzzle_io.py               # puzzle I/O, grid generation, puncturing, solution check
   benchmark.py               # benchmark harness (one process per job, resume)
+  benchmark_schema.py        # versioned CSV schema shared with the audit tool
   plot_results.py            # figures, tables and --audit
   encodings/                 # alo.py, amo.py (8 AMO encodings)
   baselines/                 # CP-SAT, Gurobi, CPLEX MIP, CPLEX CP, CBC
   tests/                     # pytest suite
 data/puzzles/                # example puzzle
 results/                     # results.csv, meta.json, instances/, figures/, tables/
-report/                      # LaTeX sources of the report
+  # No report source directory or root main.pdf is present in this checkout.
 ```
 
 ## Data Availability
 
-Source code, sample input, raw benchmark CSV (`results/results.csv`), the puzzle
-instances used (`results/instances/`), the environment metadata
-(`results/meta.json`) and the scripts that regenerate the figures and tables are
-available in the project repository:
+Source code, sample input, the tracked raw benchmark CSV
+(`results/results.csv`, schema v1), puzzle instances, environment metadata,
+and generated figures and tables are present in this checkout. The metadata
+also contains a later schema-v3 invocation, but its associated
+`results/results.v3.csv` currently exists only as an untracked local file; it
+will not be part of the repository until added and published. The root
+`results.zip` contains a snapshot of plots/tables, not a report PDF. The scripts
+to regenerate plots and tables are included. The repository URL below is left
+unchanged because the configured `origin` URL differs and its official
+ownership could not be independently verified; please confirm which URL should
+be published.
+
 https://github.com/canknotcaw/sudoku_sat_solver

@@ -1,121 +1,217 @@
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrrrr}
 \toprule
-experiment & method & n & status & runs \\
+experiment & method & solver & n & keep\_ratio & split & status & runs \\
 \midrule
-ablation & pairwise & 9 & solved & 3 \\
-ablation & pairwise & 16 & solved & 3 \\
-ablation & pairwise & 25 & solved & 3 \\
-ablation & pairwise & 36 & solved & 2 \\
-ablation & pairwise & 36 & timeout & 1 \\
-ablation & product & 9 & solved & 3 \\
-ablation & product & 16 & solved & 3 \\
-ablation & product & 25 & solved & 3 \\
-ablation & product & 36 & timeout & 3 \\
-ablation & sequential & 9 & solved & 3 \\
-ablation & sequential & 16 & solved & 3 \\
-ablation & sequential & 25 & solved & 3 \\
-ablation & sequential & 36 & timeout & 3 \\
-baseline & cbc\_ilp & 9 & solved & 3 \\
-baseline & cbc\_ilp & 16 & solved & 3 \\
-baseline & cbc\_ilp & 25 & solved & 1 \\
-baseline & cbc\_ilp & 25 & timeout & 2 \\
-baseline & cbc\_ilp & 36 & timeout & 3 \\
-baseline & cplex\_cp & 9 & solved & 3 \\
-baseline & cplex\_cp & 16 & solved & 3 \\
-baseline & cplex\_cp & 25 & license\_limit & 2 \\
-baseline & cplex\_cp & 25 & solved & 1 \\
-baseline & cplex\_cp & 36 & license\_limit & 3 \\
-baseline & cplex\_mip & 9 & solved & 3 \\
-baseline & cplex\_mip & 16 & license\_limit & 3 \\
-baseline & cplex\_mip & 25 & license\_limit & 3 \\
-baseline & cplex\_mip & 36 & license\_limit & 3 \\
-baseline & cpsat & 9 & solved & 3 \\
-baseline & cpsat & 16 & solved & 3 \\
-baseline & cpsat & 25 & solved & 3 \\
-baseline & cpsat & 36 & solved & 3 \\
-baseline & gurobi & 9 & solved & 3 \\
-baseline & gurobi & 16 & license\_limit & 3 \\
-baseline & gurobi & 25 & license\_limit & 3 \\
-baseline & gurobi & 36 & license\_limit & 3 \\
-sat & binary & 9 & solved & 12 \\
-sat & binary & 16 & solved & 12 \\
-sat & binary & 25 & solved & 12 \\
-sat & binary & 36 & solved & 11 \\
-sat & binary & 36 & timeout & 1 \\
-sat & commander & 9 & solved & 12 \\
-sat & commander & 16 & solved & 12 \\
-sat & commander & 25 & solved & 12 \\
-sat & commander & 36 & solved & 12 \\
-sat & pairwise & 9 & solved & 12 \\
-sat & pairwise & 16 & solved & 12 \\
-sat & pairwise & 25 & solved & 12 \\
-sat & pairwise & 36 & solved & 12 \\
-sat & product & 9 & solved & 12 \\
-sat & product & 16 & solved & 12 \\
-sat & product & 25 & solved & 12 \\
-sat & product & 36 & solved & 12 \\
-sat & pysat\_bitwise & 9 & solved & 12 \\
-sat & pysat\_bitwise & 16 & solved & 12 \\
-sat & pysat\_bitwise & 25 & solved & 12 \\
-sat & pysat\_bitwise & 36 & solved & 12 \\
-sat & pysat\_ladder & 9 & solved & 12 \\
-sat & pysat\_ladder & 16 & solved & 12 \\
-sat & pysat\_ladder & 25 & solved & 12 \\
-sat & pysat\_ladder & 36 & solved & 12 \\
-sat & pysat\_seqcounter & 9 & solved & 12 \\
-sat & pysat\_seqcounter & 16 & solved & 12 \\
-sat & pysat\_seqcounter & 25 & solved & 12 \\
-sat & pysat\_seqcounter & 36 & solved & 12 \\
-sat & sequential & 9 & solved & 12 \\
-sat & sequential & 16 & solved & 12 \\
-sat & sequential & 25 & solved & 12 \\
-sat & sequential & 36 & solved & 12 \\
-size & binary & 9 & encoded & 1 \\
-size & binary & 16 & encoded & 1 \\
-size & binary & 25 & encoded & 1 \\
-size & binary & 36 & encoded & 1 \\
-size & binary & 49 & encoded & 1 \\
-size & binary & 64 & encoded & 1 \\
-size & commander & 9 & encoded & 1 \\
-size & commander & 16 & encoded & 1 \\
-size & commander & 25 & encoded & 1 \\
-size & commander & 36 & encoded & 1 \\
-size & commander & 49 & encoded & 1 \\
-size & commander & 64 & encoded & 1 \\
-size & pairwise & 9 & encoded & 1 \\
-size & pairwise & 16 & encoded & 1 \\
-size & pairwise & 25 & encoded & 1 \\
-size & pairwise & 36 & encoded & 1 \\
-size & pairwise & 49 & encoded & 1 \\
-size & product & 9 & encoded & 1 \\
-size & product & 16 & encoded & 1 \\
-size & product & 25 & encoded & 1 \\
-size & product & 36 & encoded & 1 \\
-size & product & 49 & encoded & 1 \\
-size & product & 64 & encoded & 1 \\
-size & pysat\_bitwise & 9 & encoded & 1 \\
-size & pysat\_bitwise & 16 & encoded & 1 \\
-size & pysat\_bitwise & 25 & encoded & 1 \\
-size & pysat\_bitwise & 36 & encoded & 1 \\
-size & pysat\_bitwise & 49 & encoded & 1 \\
-size & pysat\_bitwise & 64 & encoded & 1 \\
-size & pysat\_ladder & 9 & encoded & 1 \\
-size & pysat\_ladder & 16 & encoded & 1 \\
-size & pysat\_ladder & 25 & encoded & 1 \\
-size & pysat\_ladder & 36 & encoded & 1 \\
-size & pysat\_ladder & 49 & encoded & 1 \\
-size & pysat\_ladder & 64 & encoded & 1 \\
-size & pysat\_seqcounter & 9 & encoded & 1 \\
-size & pysat\_seqcounter & 16 & encoded & 1 \\
-size & pysat\_seqcounter & 25 & encoded & 1 \\
-size & pysat\_seqcounter & 36 & encoded & 1 \\
-size & pysat\_seqcounter & 49 & encoded & 1 \\
-size & pysat\_seqcounter & 64 & encoded & 1 \\
-size & sequential & 9 & encoded & 1 \\
-size & sequential & 16 & encoded & 1 \\
-size & sequential & 25 & encoded & 1 \\
-size & sequential & 36 & encoded & 1 \\
-size & sequential & 49 & encoded & 1 \\
-size & sequential & 64 & encoded & 1 \\
+ablation & pairwise & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & pairwise & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & pairwise & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & pairwise & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 2 \\
+ablation & pairwise & cadical195 & 36 & 0.4 & legacy\_unpartitioned & timeout & 1 \\
+ablation & product & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & product & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & product & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & product & cadical195 & 36 & 0.4 & legacy\_unpartitioned & timeout & 3 \\
+ablation & sequential & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & sequential & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & sequential & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+ablation & sequential & cadical195 & 36 & 0.4 & legacy\_unpartitioned & timeout & 3 \\
+baseline & cbc\_ilp & cbc\_ilp & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cbc\_ilp & cbc\_ilp & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cbc\_ilp & cbc\_ilp & 25 & 0.4 & legacy\_unpartitioned & solved & 1 \\
+baseline & cbc\_ilp & cbc\_ilp & 25 & 0.4 & legacy\_unpartitioned & timeout & 2 \\
+baseline & cbc\_ilp & cbc\_ilp & 36 & 0.4 & legacy\_unpartitioned & timeout & 3 \\
+baseline & cplex\_cp & cplex\_cp & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cplex\_cp & cplex\_cp & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cplex\_cp & cplex\_cp & 25 & 0.4 & legacy\_unpartitioned & license\_limit & 2 \\
+baseline & cplex\_cp & cplex\_cp & 25 & 0.4 & legacy\_unpartitioned & solved & 1 \\
+baseline & cplex\_cp & cplex\_cp & 36 & 0.4 & legacy\_unpartitioned & license\_limit & 3 \\
+baseline & cplex\_mip & cplex\_mip & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cplex\_mip & cplex\_mip & 16 & 0.4 & legacy\_unpartitioned & license\_limit & 3 \\
+baseline & cplex\_mip & cplex\_mip & 25 & 0.4 & legacy\_unpartitioned & license\_limit & 3 \\
+baseline & cplex\_mip & cplex\_mip & 36 & 0.4 & legacy\_unpartitioned & license\_limit & 3 \\
+baseline & cpsat & cpsat & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cpsat & cpsat & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cpsat & cpsat & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & cpsat & cpsat & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & gurobi & gurobi & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+baseline & gurobi & gurobi & 16 & 0.4 & legacy\_unpartitioned & license\_limit & 3 \\
+baseline & gurobi & gurobi & 25 & 0.4 & legacy\_unpartitioned & license\_limit & 3 \\
+baseline & gurobi & gurobi & 36 & 0.4 & legacy\_unpartitioned & license\_limit & 3 \\
+sat & binary & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 2 \\
+sat & binary & glucose42 & 36 & 0.4 & legacy\_unpartitioned & timeout & 1 \\
+sat & binary & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & binary & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & commander & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pairwise & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & product & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_bitwise & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_ladder & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & pysat\_seqcounter & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & cadical195 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & cadical195 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & cadical195 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & cadical195 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & glucose42 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & glucose42 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & glucose42 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & glucose42 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & kissat404 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & kissat404 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & kissat404 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & kissat404 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & minisat22 & 9 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & minisat22 & 16 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & minisat22 & 25 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+sat & sequential & minisat22 & 36 & 0.4 & legacy\_unpartitioned & solved & 3 \\
+size & binary & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & binary & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & binary & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & binary & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & binary & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & binary & - & 64 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & commander & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & commander & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & commander & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & commander & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & commander & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & commander & - & 64 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pairwise & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pairwise & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pairwise & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pairwise & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pairwise & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & product & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & product & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & product & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & product & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & product & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & product & - & 64 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_bitwise & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_bitwise & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_bitwise & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_bitwise & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_bitwise & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_bitwise & - & 64 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_ladder & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_ladder & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_ladder & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_ladder & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_ladder & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_ladder & - & 64 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_seqcounter & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_seqcounter & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_seqcounter & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_seqcounter & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_seqcounter & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & pysat\_seqcounter & - & 64 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & sequential & - & 9 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & sequential & - & 16 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & sequential & - & 25 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & sequential & - & 36 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & sequential & - & 49 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
+size & sequential & - & 64 & 0.4 & legacy\_unpartitioned & encoded & 1 \\
 \bottomrule
 \end{tabular}
