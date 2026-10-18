@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Temporary and backup files
+results/*.tmp
+*.bak.csv
+*.swp
+.DS_Store
+
+# Secrets and licences (never commit)
+.env
+*.lic
+gurobi.lic
