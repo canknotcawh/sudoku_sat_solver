@@ -4,8 +4,8 @@ Run:  python3 -m pytest src/tests/test_sudoku.py
 """
 import pytest
 
-from src.encodings.amo import AMO_ENCODERS
-from src.puzzle_io import generate_solved_grid, parse_string, puncture
+from src.encodings.amo import AMO_ENCODERS, amo_commander
+from src.puzzle_io import generate_solved_grid, grid_to_string, parse_string, puncture
 from src.solver import solve, solve_check_unique
 from src.sudoku_encoder import SudokuEncoder
 
@@ -157,6 +157,23 @@ def test_decode_rejects_invalid_models():
         encoder.decode(model)                                # each cell fine, Sudoku rules broken
 
 
+def test_parser_errors_and_roundtrip():
+    for bad, box in (("x" * 81, 3), ("." * 80, 3), ("g" + "." * 80, 3), ("." * 1296, 6), ("." * 81, 0)):
+        with pytest.raises(ValueError):
+            parse_string(bad, box)
+    for box in (3, 4, 5):  # 9x9, 16x16, 25x25
+        n = box * box
+        sol = generate_solved_grid(box, seed=1)
+        assert parse_string(grid_to_string(sol), box) == [(r, c, sol[r][c] - 1) for r in range(n) for c in range(n)]
+
+
+def test_commander_guard():
+    counter = iter(range(10, 1000))
+    for bad in (1, 0, -3, True, 2.5):
+        with pytest.raises(ValueError):
+            amo_commander([1, 2, 3], lambda: next(counter), group_size=bad)
+
+
 if __name__ == "__main__":
     test_example_9x9_all_encodings()
     print("PASS 9x9, all encodings agree")
@@ -174,4 +191,6 @@ if __name__ == "__main__":
     test_invalid_clues_rejected()
     test_contradictory_clues_in_different_cells_are_unsat()
     test_decode_rejects_invalid_models()
-    print("PASS encoder validation, unit_alo, large box sizes, decode checks")
+    test_parser_errors_and_roundtrip()
+    test_commander_guard()
+    print("PASS encoder validation, unit_alo, large box sizes, decode checks, parser, commander guard")
