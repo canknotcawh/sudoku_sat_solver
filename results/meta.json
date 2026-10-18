@@ -695,6 +695,178 @@
         "minisat22"
       ],
       "started_utc": "2026-10-18T07:14:35+00:00"
+    },
+    {
+      "ablation_solver": "cadical195",
+      "command": "/home/cank/Desktop/sudoku_sat_solver/.venv/bin/python -m src.benchmark --only size --out results/results.csv",
+      "cpu_count": 12,
+      "git_commit": "68b1a88d32969adfe525d26e2d5753bdaeaffadb",
+      "instances": [
+        {
+          "box": 3,
+          "file": "instances/b3-p0-k0.4-5249c5931c88.suk",
+          "keep_ratio": 0.4,
+          "n": 9,
+          "n_clues": 32,
+          "puzzle": 0,
+          "seed": 3000,
+          "sha256_12": "5249c5931c88"
+        },
+        {
+          "box": 3,
+          "file": "instances/b3-p1-k0.4-816dfb62ae6a.suk",
+          "keep_ratio": 0.4,
+          "n": 9,
+          "n_clues": 34,
+          "puzzle": 1,
+          "seed": 3001,
+          "sha256_12": "816dfb62ae6a"
+        },
+        {
+          "box": 3,
+          "file": "instances/b3-p2-k0.4-9c075bba8b30.suk",
+          "keep_ratio": 0.4,
+          "n": 9,
+          "n_clues": 40,
+          "puzzle": 2,
+          "seed": 3002,
+          "sha256_12": "9c075bba8b30"
+        },
+        {
+          "box": 4,
+          "file": "instances/b4-p0-k0.4-a7930fcd7c9d.suk",
+          "keep_ratio": 0.4,
+          "n": 16,
+          "n_clues": 120,
+          "puzzle": 0,
+          "seed": 4000,
+          "sha256_12": "a7930fcd7c9d"
+        },
+        {
+          "box": 4,
+          "file": "instances/b4-p1-k0.4-933a7fd70678.suk",
+          "keep_ratio": 0.4,
+          "n": 16,
+          "n_clues": 103,
+          "puzzle": 1,
+          "seed": 4001,
+          "sha256_12": "933a7fd70678"
+        },
+        {
+          "box": 4,
+          "file": "instances/b4-p2-k0.4-c104c5b3be7b.suk",
+          "keep_ratio": 0.4,
+          "n": 16,
+          "n_clues": 101,
+          "puzzle": 2,
+          "seed": 4002,
+          "sha256_12": "c104c5b3be7b"
+        },
+        {
+          "box": 5,
+          "file": "instances/b5-p0-k0.4-a5355df38c56.suk",
+          "keep_ratio": 0.4,
+          "n": 25,
+          "n_clues": 249,
+          "puzzle": 0,
+          "seed": 5000,
+          "sha256_12": "a5355df38c56"
+        },
+        {
+          "box": 5,
+          "file": "instances/b5-p1-k0.4-4ba5ecffbe0e.suk",
+          "keep_ratio": 0.4,
+          "n": 25,
+          "n_clues": 262,
+          "puzzle": 1,
+          "seed": 5001,
+          "sha256_12": "4ba5ecffbe0e"
+        },
+        {
+          "box": 5,
+          "file": "instances/b5-p2-k0.4-97bf7fede3ac.suk",
+          "keep_ratio": 0.4,
+          "n": 25,
+          "n_clues": 247,
+          "puzzle": 2,
+          "seed": 5002,
+          "sha256_12": "97bf7fede3ac"
+        },
+        {
+          "box": 6,
+          "file": null,
+          "keep_ratio": 0.4,
+          "n": 36,
+          "n_clues": 498,
+          "puzzle": 0,
+          "seed": 6000,
+          "sha256_12": "d93be1002823"
+        },
+        {
+          "box": 6,
+          "file": null,
+          "keep_ratio": 0.4,
+          "n": 36,
+          "n_clues": 489,
+          "puzzle": 1,
+          "seed": 6001,
+          "sha256_12": "660c3c168b95"
+        },
+        {
+          "box": 6,
+          "file": null,
+          "keep_ratio": 0.4,
+          "n": 36,
+          "n_clues": 525,
+          "puzzle": 2,
+          "seed": 6002,
+          "sha256_12": "4eeb766509b2"
+        }
+      ],
+      "machine": "x86_64",
+      "packages": {
+        "cplex": "22.2.0.1",
+        "docplex": "2.32.264",
+        "gurobipy": "13.0.3",
+        "matplotlib": "3.11.2",
+        "ortools": "9.15.6755",
+        "pandas": "3.0.6",
+        "pulp": "2.9.0",
+        "python-sat": "1.9.dev16"
+      },
+      "parameters": {
+        "boxes": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "keep_ratio": 0.4,
+        "only": [
+          "size"
+        ],
+        "out": "results/results.csv",
+        "puzzles": 3,
+        "size_boxes": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "timeout": 60
+      },
+      "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+      "python": "3.14.4",
+      "sat_solvers_unusable": {},
+      "sat_solvers_used": [
+        "cadical195",
+        "glucose42",
+        "kissat404",
+        "minisat22"
+      ],
+      "started_utc": "2026-10-18T07:17:55+00:00"
     }
   ]
 }

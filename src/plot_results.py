@@ -107,6 +107,8 @@ def fmt_time(x, censored=False):
         return "--"
     if censored:
         return f">{LIMIT:.0f}"
+    if x < 0.1:
+        return f"{x:.3f}"
     return f"{x:.2f}" if x < 10 else f"{x:.1f}"
 
 
@@ -357,13 +359,19 @@ def tables(df, out):
                 r = b[(b.n == n) & (b.method == m)]
                 if r.empty:
                     row[BASE_LABEL[m]] = "--"
-                elif (r.status == "license_limit").all():
-                    row[BASE_LABEL[m]] = "licence cap"
-                elif (r.status == "timeout").all():
-                    row[BASE_LABEL[m]] = f">{LIMIT:.0f}"
+                    continue
+                total, solved = len(r), int((r.status == "solved").sum())
+                ok = r[r.status.isin(TIMED)]
+                if (r.status == "license_limit").all():
+                    cell = "licence cap"
+                elif ok.empty:
+                    cell = "--"
                 else:
-                    ok = r[r.status.isin(TIMED)]
-                    row[BASE_LABEL[m]] = fmt_time(ok["t_plot"].median()) if not ok.empty else "--"
+                    med = ok["t_plot"].median()
+                    cell = f">{LIMIT:.0f}" if med >= LIMIT else fmt_time(med)
+                    if solved < total:  # some runs timed out or were refused: say how many solved
+                        cell += f" ({solved}/{total})"
+                row[BASE_LABEL[m]] = cell
             rows.append(row)
         write_table(pd.DataFrame(rows), out, "baseline_table")
 
