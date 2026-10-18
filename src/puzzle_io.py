@@ -123,13 +123,40 @@ def puncture(grid: List[List[int]], keep_ratio: float = 0.3, seed: int = None) -
 
 
 def is_valid_solution(grid: List[List[int]], givens: Givens, box_size: int) -> bool:
-    """True iff `grid` is a complete valid Sudoku that keeps every given."""
+    """Return whether a complete grid is a valid Sudoku and respects its clues.
+
+    Invalid box sizes, grid shapes/types and malformed or out-of-range clues all
+    return ``False``. This keeps the validator suitable for checking untrusted
+    solver output without leaking ``TypeError``/``IndexError`` to callers.
+    """
+    if isinstance(box_size, bool) or not isinstance(box_size, int) or box_size <= 0:
+        return False
+    if not isinstance(grid, (list, tuple)):
+        return False
     n = box_size * box_size
+    if len(grid) != n or any(not isinstance(row, (list, tuple)) or len(row) != n for row in grid):
+        return False
+    if any(isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= n
+           for row in grid for value in row):
+        return False
+    if not isinstance(givens, (list, tuple)):
+        return False
+    for clue in givens:
+        if not isinstance(clue, (list, tuple)) or len(clue) != 3:
+            return False
+        r, c, value = clue
+        if (any(isinstance(x, bool) or not isinstance(x, int) for x in clue)
+                or not 0 <= r < n or not 0 <= c < n or not 0 <= value < n):
+            return False
+
     want = set(range(1, n + 1))
-    units = [set(row) for row in grid]
-    units += [set(grid[r][c] for r in range(n)) for c in range(n)]
-    units += [
-        set(grid[r][c] for r in range(br, br + box_size) for c in range(bc, bc + box_size))
-        for br in range(0, n, box_size) for bc in range(0, n, box_size)
-    ]
-    return all(u == want for u in units) and all(grid[r][c] == v + 1 for r, c, v in givens)
+    if any(set(row) != want for row in grid):
+        return False
+    if any({grid[r][c] for r in range(n)} != want for c in range(n)):
+        return False
+    for br in range(0, n, box_size):
+        for bc in range(0, n, box_size):
+            if {grid[r][c] for r in range(br, br + box_size)
+                for c in range(bc, bc + box_size)} != want:
+                return False
+    return all(grid[r][c] == value + 1 for r, c, value in givens)

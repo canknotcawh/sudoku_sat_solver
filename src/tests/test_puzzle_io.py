@@ -58,6 +58,40 @@ def test_is_valid_solution_rejects_bad_grids():
     assert not is_valid_solution(bad, [], 3)
 
 
+@pytest.mark.parametrize("bad_grid", [
+    None,
+    [],
+    [[1] * 8 for _ in range(9)],
+    [[1] * 9 for _ in range(8)],
+    [[1] * 9 for _ in range(8)] + [[1] * 8],
+    [[1] * 8 + [True]] + [[1] * 9 for _ in range(8)],
+    [[1] * 8 + [1.0]] + [[1] * 9 for _ in range(8)],
+])
+def test_validator_returns_false_for_invalid_grid_shape_or_types(bad_grid):
+    assert is_valid_solution(bad_grid, [], 3) is False
+
+
+@pytest.mark.parametrize("box", [0, -1, True, 2.5, None])
+def test_validator_returns_false_for_invalid_box_size(box):
+    assert is_valid_solution([], [], box) is False
+
+
+@pytest.mark.parametrize("clues", [
+    None,
+    [(0, 0)],
+    [(True, 0, 0)],
+    [(0, 0, False)],
+    [(-1, 0, 0)],
+    [(0, 9, 0)],
+    [(0, 0, -1)],
+    [(0, 0, 9)],
+    [(0.0, 0, 0)],
+])
+def test_validator_returns_false_for_malformed_or_out_of_range_clues(clues):
+    grid = generate_solved_grid(3, seed=1)
+    assert is_valid_solution(grid, clues, 3) is False
+
+
 def test_parse_errors_and_format_limit():
     for text, box in (("x" * 81, 3), ("." * 80, 3), ("g" + "." * 80, 3), ("." * 81, 0), ("." * 1296, 6)):
         with pytest.raises(ValueError):
