@@ -4,7 +4,7 @@ Variable convention: var(r, c, v) means "cell (r, c) holds value v" (0-indexed
 r, c, v). Variables are numbered 1..n^3 in row-major (r, c, v) order; any
 auxiliary variables needed by the chosen AMO encoding are numbered after that.
 """
-from typing import Callable, List, Tuple
+from typing import Callable, Iterator, List, Tuple
 
 from .encodings.alo import alo
 from .encodings.amo import AMO_ENCODERS
@@ -44,6 +44,8 @@ class SudokuEncoder:
         self.amo_method = amo_method
         self.unit_alo = unit_alo
         self._amo_fn = AMO_ENCODERS[amo_method]
+        self.last_clause_count = 0
+        self.last_variable_count = self.n ** 3
 
     def var(self, r: int, c: int, v: int) -> int:
         n = self.n
@@ -54,8 +56,7 @@ class SudokuEncoder:
             return self._amo_fn(lits)
         return self._amo_fn(lits, pool.new)
 
-    def encode(self, givens: Givens) -> Tuple[List[Clause], int]:
-        """Returns (clauses, total_variable_count)."""
+    def _validated_givens(self, givens: Givens) -> dict:
         n, box = self.n, self.box
         seen_cells = {}
         for index, given in enumerate(givens):
@@ -74,28 +75,47 @@ class SudokuEncoder:
                     f"conflicting clues for cell ({r}, {c}): values {seen_cells[cell] + 1} and {v + 1}")
             seen_cells[cell] = v  # a repeated identical clue is harmless and is kept once
 
-        clauses: List[Clause] = []
+        return seen_cells
+
+    def iter_encode(self, givens: Givens) -> Iterator[Clause]:
+        """Yield CNF clauses in the same order as :meth:`encode`.
+
+        Only the current ALO/AMO group is materialized. The legacy ``encode`` API
+        remains available for callers that need a complete in-memory CNF.
+        ``last_clause_count`` and ``last_variable_count`` are finalized when the
+        iterator is exhausted.
+        """
+        n, box = self.n, self.box
+        seen_cells = self._validated_givens(givens)
+
         pool = VarPool(start=n * n * n + 1)  # aux vars start right after the n^3 cell variables
+        clause_count = 0
+
+        def emit(group):
+            nonlocal clause_count
+            for clause in group:
+                clause_count += 1
+                yield clause
 
         # 1. Each cell holds at least one value, and at most one value.
         for r in range(n):
             for c in range(n):
                 lits = [self.var(r, c, v) for v in range(n)]
-                clauses.extend(alo(lits))
-                clauses.extend(self._amo(lits, pool))
+                yield from emit(alo(lits))
+                yield from emit(self._amo(lits, pool))
 
         # 2. Each value appears at most once per row, column, box, and (when unit_alo) also at least once.
         for v in range(n):
             for r in range(n):
                 lits = [self.var(r, c, v) for c in range(n)]
                 if self.unit_alo:
-                    clauses.extend(alo(lits))
-                clauses.extend(self._amo(lits, pool))
+                    yield from emit(alo(lits))
+                yield from emit(self._amo(lits, pool))
             for c in range(n):
                 lits = [self.var(r, c, v) for r in range(n)]
                 if self.unit_alo:
-                    clauses.extend(alo(lits))
-                clauses.extend(self._amo(lits, pool))
+                    yield from emit(alo(lits))
+                yield from emit(self._amo(lits, pool))
             for br in range(0, n, box):
                 for bc in range(0, n, box):
                     lits = [
@@ -104,14 +124,20 @@ class SudokuEncoder:
                         for c in range(bc, bc + box)
                     ]
                     if self.unit_alo:
-                        clauses.extend(alo(lits))
-                    clauses.extend(self._amo(lits, pool))
+                        yield from emit(alo(lits))
+                    yield from emit(self._amo(lits, pool))
 
         # 3. Given clues become unit clauses.
         for (r, c), v in seen_cells.items():
-            clauses.append([self.var(r, c, v)])
+            yield from emit(([self.var(r, c, v)],))
 
-        return clauses, pool.count
+        self.last_clause_count = clause_count
+        self.last_variable_count = pool.count
+
+    def encode(self, givens: Givens) -> Tuple[List[Clause], int]:
+        """Returns (clauses, total_variable_count); materializes the full CNF."""
+        clauses = list(self.iter_encode(givens))
+        return clauses, self.last_variable_count
 
     def decode(self, model: List[int]) -> List[List[int]]:
         """Turn a satisfying assignment (list of signed literals from the solver)

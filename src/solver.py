@@ -1,10 +1,58 @@
 """Solve a Sudoku CNF with a PySAT-backed SAT solver."""
 from dataclasses import dataclass
+import time
 from typing import List, Optional
 
 from pysat.solvers import Solver
 
 from .sudoku_encoder import SudokuEncoder, Clause
+
+
+@dataclass
+class StreamingSolveResult:
+    grid: Optional[List[List[int]]]
+    t_encode: float
+    t_solver_load: float
+    t_solve: float
+    clause_count: int
+    variable_count: int
+
+
+def solve_streaming(encoder: SudokuEncoder, givens, solver_name: str = "cadical195") -> StreamingSolveResult:
+    """Generate clauses incrementally and add each directly to a PySAT solver.
+
+    ``t_encode`` measures Python clause generation; ``t_solver_load`` measures
+    calls that transfer generated clauses into PySAT. The legacy materialized
+    ``solve`` API is unchanged. Encode and load measurements are interleaved at
+    clause granularity and their sum approximates pre-solve elapsed time.
+    """
+    solver = Solver(name=solver_name, use_timer=True)
+    t_encode = 0.0
+    t_load = 0.0
+    count = 0
+    clauses = iter(encoder.iter_encode(givens))
+    try:
+        while True:
+            started = time.perf_counter()
+            try:
+                clause = next(clauses)
+            except StopIteration:
+                t_encode += time.perf_counter() - started
+                break
+            t_encode += time.perf_counter() - started
+            started = time.perf_counter()
+            solver.add_clause(clause)
+            t_load += time.perf_counter() - started
+            count += 1
+
+        t0 = time.perf_counter()
+        sat = solver.solve()
+        t_solve = time.perf_counter() - t0
+        grid = encoder.decode(solver.get_model()) if sat else None
+        return StreamingSolveResult(grid, t_encode, t_load, t_solve,
+                                    count, encoder.last_variable_count)
+    finally:
+        solver.delete()
 
 
 def solve(encoder: SudokuEncoder, clauses: List[Clause], solver_name: str = "cadical195") -> Optional[List[List[int]]]:

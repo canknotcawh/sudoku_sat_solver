@@ -6,7 +6,7 @@ import pytest
 
 from src.encodings.amo import AMO_ENCODERS, amo_commander
 from src.puzzle_io import generate_solved_grid, grid_to_string, parse_string, puncture
-from src.solver import solve, solve_check_unique
+from src.solver import solve, solve_check_unique, solve_streaming
 from src.sudoku_encoder import SudokuEncoder
 
 EXAMPLE_9X9 = (
@@ -97,6 +97,36 @@ def test_encoder_accepts_large_box_sizes():
         assert encoder.n == box * box
     clauses, n_vars = SudokuEncoder(box_size=6, amo_method="sequential").encode([])
     assert n_vars >= 36 ** 3 and clauses
+
+
+def test_streamed_clauses_match_materialized_for_each_amo():
+    givens = [(0, 0, 0), (1, 2, 3)]
+    for method in AMO_ENCODERS:
+        materializer = SudokuEncoder(box_size=2, amo_method=method)
+        expected, expected_vars = materializer.encode(givens)
+        streamed_encoder = SudokuEncoder(box_size=2, amo_method=method)
+        streamed = list(streamed_encoder.iter_encode(givens))
+        assert streamed == expected
+        assert streamed_encoder.last_clause_count == len(expected)
+        assert streamed_encoder.last_variable_count == expected_vars
+        aux_vars = {abs(lit) for clause in streamed for lit in clause
+                    if abs(lit) > streamed_encoder.n ** 3}
+        assert (max(aux_vars) if aux_vars else streamed_encoder.n ** 3) == expected_vars
+        assert aux_vars == set(range(streamed_encoder.n ** 3 + 1, expected_vars + 1))
+
+
+def test_streaming_solver_matches_materialized_solution_and_counts():
+    givens = [(0, 0, 0), (1, 1, 3)]
+    materialized_encoder = SudokuEncoder(box_size=2, amo_method="sequential")
+    clauses, n_vars = materialized_encoder.encode(givens)
+    materialized = solve(materialized_encoder, clauses, solver_name="cadical195")
+    streamed_encoder = SudokuEncoder(box_size=2, amo_method="sequential")
+    result = solve_streaming(streamed_encoder, givens, solver_name="cadical195")
+    assert result.grid == materialized
+    assert result.clause_count == len(clauses)
+    assert result.variable_count == n_vars
+    assert result.t_encode >= 0 and result.t_solver_load >= 0 and result.t_solve >= 0
+    assert is_valid(result.grid, givens, 2)
 
 
 def test_unit_alo_off_gives_fewer_clauses_and_same_solution():
