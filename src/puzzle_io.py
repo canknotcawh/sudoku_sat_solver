@@ -70,34 +70,66 @@ def grid_to_string(grid: List[List[int]]) -> str:
     return "\n".join("".join(enc(v) for v in row) for row in grid)
 
 
+def givens_to_string(givens: Givens, box_size: int) -> str:
+    """Serialize 0-indexed givens (row, column, value) in the puzzle text format
+    (inverse of parse_string). Subject to the same box_size <= 5 limit."""
+    _validate_box_size(box_size)
+    n = box_size * box_size
+    grid = [[0] * n for _ in range(n)]
+    for r, c, v in givens:
+        grid[r][c] = v + 1
+    return grid_to_string(grid)
+
+
 def generate_solved_grid(box_size: int, seed: int = None) -> List[List[int]]:
     """A valid, fully solved grid via the classic diagonal-shift base pattern,
     then randomly relabeled so successive calls don't all look identical."""
-    if seed is not None:
-        random.seed(seed)
+    rng = random.Random(seed)
     n = box_size * box_size
-
+ 
     def base(r: int, c: int) -> int:
         return (r * box_size + r // box_size + c) % n
-
-    grid = [[base(r, c) + 1 for c in range(n)] for r in range(n)]
-
+ 
+    def shuffled_axis() -> List[int]:
+        """A random order of 0..n-1 that keeps every band (group of `box_size`
+        rows or columns) together, so the grid stays a valid Sudoku."""
+        bands = list(range(box_size))
+        rng.shuffle(bands)
+        order = []
+        for b in bands:
+            inside = list(range(box_size))
+            rng.shuffle(inside)
+            order.extend(b * box_size + i for i in inside)
+        return order
+ 
+    rows, cols = shuffled_axis(), shuffled_axis()
     values = list(range(1, n + 1))
-    random.shuffle(values)
-    remap = {i + 1: values[i] for i in range(n)}
-    return [[remap[v] for v in row] for row in grid]
-
-
+    rng.shuffle(values)
+    return [[values[base(r, c)] for c in cols] for r in rows]
+ 
+ 
 def puncture(grid: List[List[int]], keep_ratio: float = 0.3, seed: int = None) -> Givens:
     """Keep only `keep_ratio` of the cells as givens (0-indexed values).
     Note: does not guarantee a unique solution — fine for solve-time
     benchmarking, not for generating "real" puzzles to hand-solve."""
-    if seed is not None:
-        random.seed(seed)
+    rng = random.Random(seed)
     n = len(grid)
     givens: Givens = []
     for r in range(n):
         for c in range(n):
-            if random.random() < keep_ratio:
+            if rng.random() < keep_ratio:
                 givens.append((r, c, grid[r][c] - 1))
     return givens
+
+
+def is_valid_solution(grid: List[List[int]], givens: Givens, box_size: int) -> bool:
+    """True iff `grid` is a complete valid Sudoku that keeps every given."""
+    n = box_size * box_size
+    want = set(range(1, n + 1))
+    units = [set(row) for row in grid]
+    units += [set(grid[r][c] for r in range(n)) for c in range(n)]
+    units += [
+        set(grid[r][c] for r in range(br, br + box_size) for c in range(bc, bc + box_size))
+        for br in range(0, n, box_size) for bc in range(0, n, box_size)
+    ]
+    return all(u == want for u in units) and all(grid[r][c] == v + 1 for r, c, v in givens)

@@ -30,16 +30,19 @@ class VarPool:
 
 
 class SudokuEncoder:
-    def __init__(self, box_size: int = 3, amo_method: str = "pairwise"):
+    def __init__(self, box_size: int = 3, amo_method: str = "pairwise", unit_alo: bool = True):
+        """`unit_alo=False` drops the "each value appears at least once" clause for every
+        row, column and box. Those clauses are logically redundant (pigeonhole, given the
+        AMO clauses and the per-cell constraints); Weber (2005) leaves them out. The per-cell
+        ALO is always kept: it is what forces every cell to hold some value."""
         if isinstance(box_size, bool) or not isinstance(box_size, int) or box_size <= 0:
             raise ValueError("box_size must be a positive integer")
-        if box_size * box_size > 35:
-            raise ValueError("base-36 puzzle format supports grid sizes up to 35 (box_size up to 5)")
         if amo_method not in AMO_ENCODERS:
             raise ValueError(f"Unknown AMO encoding '{amo_method}', choose from {list(AMO_ENCODERS)}")
         self.box = box_size
         self.n = box_size * box_size
         self.amo_method = amo_method
+        self.unit_alo = unit_alo
         self._amo_fn = AMO_ENCODERS[amo_method]
 
     def var(self, r: int, c: int, v: int) -> int:
@@ -66,11 +69,10 @@ class SudokuEncoder:
             if not 0 <= v < n:
                 raise ValueError(f"clue {index + 1} value {v + 1} is outside the range 1..{n}")
             cell = (r, c)
-            if cell in seen_cells:
-                previous = seen_cells[cell]
-                detail = "same value" if previous == v else "different values"
-                raise ValueError(f"duplicate clues for cell ({r}, {c}) have {detail}")
-            seen_cells[cell] = v
+            if cell in seen_cells and seen_cells[cell] != v:
+                raise ValueError(
+                    f"conflicting clues for cell ({r}, {c}): values {seen_cells[cell] + 1} and {v + 1}")
+            seen_cells[cell] = v  # a repeated identical clue is harmless and is kept once
 
         clauses: List[Clause] = []
         pool = VarPool(start=n * n * n + 1)  # aux vars start right after the n^3 cell variables
@@ -82,15 +84,17 @@ class SudokuEncoder:
                 clauses.extend(alo(lits))
                 clauses.extend(self._amo(lits, pool))
 
-        # 2. Each value appears at least once and at most once per row, column, box.
+        # 2. Each value appears at most once per row, column, box, and (when unit_alo) also at least once.
         for v in range(n):
             for r in range(n):
                 lits = [self.var(r, c, v) for c in range(n)]
-                clauses.extend(alo(lits))
+                if self.unit_alo:
+                    clauses.extend(alo(lits))
                 clauses.extend(self._amo(lits, pool))
             for c in range(n):
                 lits = [self.var(r, c, v) for r in range(n)]
-                clauses.extend(alo(lits))
+                if self.unit_alo:
+                    clauses.extend(alo(lits))
                 clauses.extend(self._amo(lits, pool))
             for br in range(0, n, box):
                 for bc in range(0, n, box):
@@ -99,11 +103,12 @@ class SudokuEncoder:
                         for r in range(br, br + box)
                         for c in range(bc, bc + box)
                     ]
-                    clauses.extend(alo(lits))
+                    if self.unit_alo:
+                        clauses.extend(alo(lits))
                     clauses.extend(self._amo(lits, pool))
 
         # 3. Given clues become unit clauses.
-        for (r, c, v) in givens:
+        for (r, c), v in seen_cells.items():
             clauses.append([self.var(r, c, v)])
 
         return clauses, pool.count

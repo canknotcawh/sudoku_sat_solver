@@ -15,6 +15,9 @@ def main():
                      help="Box size: 3 -> 9x9, 4 -> 16x16, 5 -> 25x25 (maximum supported)")
     ap.add_argument("--amo", default="pairwise", choices=list(AMO_ENCODERS))
     ap.add_argument("--solver", default="cadical195", help="PySAT solver name")
+    ap.add_argument("--no-unit-alo", action="store_true",
+                     help="Omit the redundant 'value appears at least once' clauses for rows, columns "
+                          "and boxes (the per-cell ALO is always kept)")
     ap.add_argument("--check-unique", action="store_true",
                      help="After solving, verify the solution is unique (adds a blocking "
                           "clause and re-solves; prints a second solution if one is found)")
@@ -27,7 +30,7 @@ def main():
     t0 = time.time()
     try:
         givens = parse_string(text, box_size=args.box)
-        encoder = SudokuEncoder(box_size=args.box, amo_method=args.amo)
+        encoder = SudokuEncoder(box_size=args.box, amo_method=args.amo, unit_alo=not args.no_unit_alo)
         clauses, n_vars = encoder.encode(givens)
     except ValueError as exc:
         ap.error(str(exc))
