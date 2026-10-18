@@ -8,9 +8,19 @@ import time
 
 import pulp
 
-from .common import ERROR, INFEASIBLE, SOLVED, TIMEOUT, BaselineResult, Givens
+from .common import ERROR, INFEASIBLE, SOLVED, BaselineResult, Givens, diagnostic, package_version
 
 NAME = "cbc_ilp"
+VERSION = package_version("pulp")
+
+
+def classify_pulp_cbc_status(status):
+    if status == "Optimal":
+        return SOLVED
+    if status == "Infeasible":
+        return INFEASIBLE
+    # PuLP's status API does not encode the termination cause.
+    return ERROR
 
 
 def solve(givens: Givens, box_size: int = 3, time_limit_s: float = 60.0) -> BaselineResult:
@@ -42,13 +52,23 @@ def solve(givens: Givens, box_size: int = 3, time_limit_s: float = 60.0) -> Base
     try:
         prob.solve(pulp.PULP_CBC_CMD(msg=False, timeLimit=time_limit_s, threads=1))
     except Exception as e:
-        return BaselineResult(ERROR, None, t_build, time.perf_counter() - t0, str(e)[:300])
+        return BaselineResult(ERROR, None, t_build, time.perf_counter() - t0,
+                              diagnostic(NAME, VERSION, "exception", f"{type(e).__name__}: {e}"))
     t_solve = time.perf_counter() - t0
 
     status = pulp.LpStatus[prob.status]
-    if status == "Optimal":
+    classified = classify_pulp_cbc_status(status)
+    if classified == SOLVED:
         grid = [[next(v + 1 for v in idx if (x[r][c][v].value() or 0) > 0.5) for c in idx] for r in idx]
         return BaselineResult(SOLVED, grid, t_build, t_solve)
-    if status == "Infeasible":
-        return BaselineResult(INFEASIBLE, None, t_build, t_solve)
-    return BaselineResult(TIMEOUT, None, t_build, t_solve, status)
+    if classified == INFEASIBLE:
+        return BaselineResult(INFEASIBLE, None, t_build, t_solve,
+                              diagnostic(NAME, VERSION, f"LpStatus={status},status_code={prob.status}"))
+    # PuLP's LpStatus 'Not Solved' does not distinguish CBC time-limit from
+    # interruption or another no-solution termination. Preserve its API state
+    # as an error/unknown instead of inferring timeout from wall duration.
+    sol_status = getattr(prob, "sol_status", None)
+    return BaselineResult(ERROR, None, t_build, t_solve,
+                          diagnostic(NAME, VERSION,
+                                     f"LpStatus={status},status_code={prob.status},sol_status={sol_status}",
+                                     "CBC termination reason unavailable through this PuLP API"))

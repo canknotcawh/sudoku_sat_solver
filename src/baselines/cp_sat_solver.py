@@ -8,9 +8,20 @@ import time
 
 from ortools.sat.python import cp_model
 
-from .common import ERROR, INFEASIBLE, SOLVED, TIMEOUT, BaselineResult, Givens
+from .common import ERROR, INFEASIBLE, SOLVED, BaselineResult, Givens, diagnostic, package_version
 
 NAME = "cpsat"
+VERSION = package_version("ortools")
+
+
+def classify_cp_sat_status(status, api):
+    if status in (api.OPTIMAL, api.FEASIBLE):
+        return SOLVED
+    if status == api.INFEASIBLE:
+        return INFEASIBLE
+    # UNKNOWN can mean time, memory, or another stop; CP-SAT exposes no
+    # termination reason in this API result, so do not misreport it as timeout.
+    return ERROR
 
 
 def solve(givens: Givens, box_size: int = 3, time_limit_s: float = 60.0) -> BaselineResult:
@@ -35,14 +46,24 @@ def solve(givens: Givens, box_size: int = 3, time_limit_s: float = 60.0) -> Base
     solver.parameters.max_time_in_seconds = time_limit_s
     solver.parameters.num_workers = 1
     t0 = time.perf_counter()
-    status = solver.Solve(model)
+    try:
+        status = solver.Solve(model)
+    except Exception as exc:
+        t_solve = time.perf_counter() - t0
+        return BaselineResult(ERROR, None, t_build, t_solve,
+                              diagnostic(NAME, VERSION, "exception", f"{type(exc).__name__}: {exc}"))
     t_solve = time.perf_counter() - t0
 
-    if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    classified = classify_cp_sat_status(status, cp_model)
+    if classified == SOLVED:
         grid = [[solver.Value(cells[r][c]) for c in range(n)] for r in range(n)]
         return BaselineResult(SOLVED, grid, t_build, t_solve)
-    if status == cp_model.INFEASIBLE:
-        return BaselineResult(INFEASIBLE, None, t_build, t_solve)
+    if classified == INFEASIBLE:
+        return BaselineResult(INFEASIBLE, None, t_build, t_solve,
+                              diagnostic(NAME, VERSION, solver.StatusName(status)))
     if status == cp_model.UNKNOWN:
-        return BaselineResult(TIMEOUT, None, t_build, t_solve)
-    return BaselineResult(ERROR, None, t_build, t_solve, f"cp_model status {status}")
+        return BaselineResult(ERROR, None, t_build, t_solve,
+                              diagnostic(NAME, VERSION, solver.StatusName(status),
+                                         solver.ResponseStats()))
+    return BaselineResult(ERROR, None, t_build, t_solve,
+                          diagnostic(NAME, VERSION, solver.StatusName(status), f"status_code={status}"))
