@@ -1,8 +1,0 @@
-# Optional baselines (Gurobi, CPLEX MIP/CP, CBC). Install with: pip install -r requirements-extra.txt
-# The pip editions of Gurobi and CPLEX are size-limited free versions; larger grids are
-# recorded as status "license_limit" by the benchmark instead of failing.
-gurobipy>=11
-cplex>=22.1
-docplex>=2.25
-# PuLP 3.x+ changed its API; the code targets the stable 2.x line.
-pulp>=2.8,<3
