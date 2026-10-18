@@ -1,4 +1,6 @@
-\documentclass[a4paper,11pt]{article}
+% Prefer the assignment's Elsevier CAS class when available; fall back to a
+% portable article layout in environments without cas-sc.cls.
+\IfFileExists{cas-sc.cls}{\documentclass[a4paper,fleqn]{cas-sc}}{\documentclass[a4paper,11pt]{article}}
 \usepackage[margin=25mm]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -38,7 +40,7 @@ Assignment 1 asks students to implement a solver for Sudoku or N-Queens using SA
 For each row $r$, column $c$, and value $v$ in $\{1,\ldots,N\}$, the encoder defines a Boolean variable $x_{r,c,v}$, true when cell $(r,c)$ contains $v$. The primary variable identifiers occupy $1$ through $N^3$; auxiliary variables used by cardinality encodings are allocated after them. Each cell has an exactly-one constraint over its $N$ value variables. For each value, each row, column, and box has an at-most-one constraint. Given clues are represented by unit clauses. The implementation can additionally emit an at-least-one clause for each row/value, column/value, and box/value group; these unit ALO clauses are controlled by the \texttt{unit\_alo} option and are redundant given the cell exactly-one and unit AMO constraints. Cell ALO clauses remain required.
 
 \subsection{AMO and ALO encodings}
-The repository implements \texttt{pairwise}, \texttt{sequential}, \texttt{commander}, \texttt{binary}, and \texttt{product} AMO encodings in \texttt{src/encodings/amo.py}. It also exposes PySAT-generated \texttt{pysat\_seqcounter}, \texttt{pysat\_bitwise}, and \texttt{pysat\_ladder}. ALO is a single positive clause containing the group variables (\texttt{src/encodings/alo.py}). The repository tests check AMO behavior exhaustively over selected group sizes: all assignments with at most one true input remain satisfiable, while assignments with any pair of true inputs are rejected. This is implementation-level evidence, not a formal proof of every possible auxiliary assignment.
+The repository implements \texttt{pairwise}, \texttt{sequential}, \texttt{commander}, \texttt{binary}, and \texttt{product} AMO encodings in \texttt{src/encodings/amo.py}. The commander family has published CNF applications [2]. It also exposes PySAT-generated \texttt{pysat\_seqcounter}, \texttt{pysat\_bitwise}, and \texttt{pysat\_ladder} through the PySAT toolkit [1]. ALO is a single positive clause containing the group variables (\texttt{src/encodings/alo.py}). The repository tests check AMO behavior exhaustively over selected group sizes: all assignments with at most one true input remain satisfiable, while assignments with any pair of true inputs are rejected. This is implementation-level evidence, not a formal proof of every possible auxiliary assignment.
 
 \subsection{Solving, decoding, and validation}
 The materialized solver path builds a CNF and passes it to a PySAT solver. A newer streaming path can generate clauses directly into a solver while preserving the same encoding semantics; streaming is an implementation capability and was not the path used to produce the committed schema-v1 result rows. A satisfying assignment is decoded using the primary cell variables. Decoded grids are validated against grid dimensions, value ranges, original clues, and all row, column, and box constraints before a benchmark row is marked valid. Optional uniqueness checking blocks the selected cell assignment and solves again; UNSAT on the blocked formula indicates uniqueness. The committed benchmark did not enable this check.
@@ -50,7 +52,7 @@ The repository contains a command-line entry point, puzzle I/O and validation, t
 \subsection{Committed data snapshot}
 The report uses \texttt{results/results.csv}, the tracked schema-v1 file, with 527 rows and 17 columns. Its first recorded run used a 60-second requested timeout, three puzzles per box size, a 0.4 clue keep ratio, and sizes 9, 16, 25, and 36 for solving. Puzzle seeds followed the legacy rule $1000b+i$ (where $b$ is box size and $i$ is the puzzle index). Rows for sizes 49 and 64 are encoding-only. The size table has no pairwise count at 64 because that encoding was skipped for the largest size due to memory constraints. The data do not record uniqueness checks; generated puzzles have at least one solution inherited from a completion, but uniqueness is not guaranteed.
 
-The metadata records Python 3.14.4 and platform details for the run. CI targets Python 3.12. The current benchmark code and README describe richer schema-v4 provenance and timing semantics, but those guarantees must not be retroactively attributed to the committed schema-v1 CSV. A separate 3,753-row schema-v3 file exists only as an untracked local artifact and is excluded from the results below.
+The metadata records Python 3.14.4 and platform details for the run; the recorded source commit is \texttt{0dcf16efbbcd005328ce590fe2611af262343f23}. CI targets Python 3.12. The current benchmark code and README describe richer schema-v4 provenance and timing semantics, but those guarantees must not be retroactively attributed to the committed schema-v1 CSV. A separate 3,753-row schema-v3 file exists only as an untracked local artifact and is excluded from the results below.
 
 \begin{table}[ht]
 \centering
@@ -138,17 +140,13 @@ Source code, tests, the example puzzle, the tracked raw benchmark file \texttt{r
 
 \section*{References}
 \begin{enumerate}[leftmargin=*]
-\item A. Biere, M. Heule, H. van Maaren, and T. Walsh, eds. \emph{Handbook of Satisfiability}. IOS Press, 2009. (General SAT background; verify edition/details required by instructor.)
-\item N. Eén and N. Sörensson. An extensible SAT-solver. In \emph{Theory and Applications of Satisfiability Testing}, 2003. [VERIFY bibliographic details before final submission.]
 \item A. Ignatiev, A. Morgado, and J. Marques-Silva. PySAT: A Python toolkit for prototyping with SAT oracles. In \emph{SAT}, 2018. DOI: \href{https://doi.org/10.1007/978-3-319-94144-8_26}{10.1007/978-3-319-94144-8\_26}.
-\item A. Sinz. Towards an optimal CNF encoding of Boolean cardinality constraints. In \emph{ 국제 Conference on Principles and Practice of Constraint Programming}, 2005. DOI: \href{https://doi.org/10.1007/11564751_73}{10.1007/11564751\_73}. [VERIFY title/venue transcription.]
 \item W. Klieber and G. Kwon. Efficient CNF encoding for selecting 1 from N objects. 2007. Available at \url{https://www.cs.cmu.edu/~wklieber/papers/2007_efficient-cnf-encoding-for-selecting-1.pdf}.
-\item J. Chen. A new SAT encoding of the at-most-one constraint. ModRef, 2010. Available at \url{https://www.it.uu.se/research/group/astra/ModRef10/papers/Jingchao\%20Chen.\%20A\%20New\%20SAT\%20Encoding\%20of\%20the\%20At-Most-One\%20Constraint\%20-%\%20ModRef\%202010.pdf}.
 \item Google OR-Tools. CP-SAT solver documentation. \url{https://developers.google.com/optimization/cp/cp_solver}.
 \item Gurobi Optimization, LLC. Numeric codes documentation. \url{https://docs.gurobi.com/projects/optimizer/en/current/reference/numericcodes.html}.
 \end{enumerate}
 
 \appendix
 \section{Author completion checklist}
-Before submission, replace all bracketed placeholders; verify the official GitHub URL and repository visibility; confirm author identity and institutional details; provide required contribution, integrity, funding, acknowledgement, competing-interest, and AI-use statements; verify references marked for checking; and confirm with the instructor whether the CAS class is mandatory. Confirm that the final report and source are committed/published before claiming public availability. The repository does not contain evidence to fill these fields.
+Before submission, replace all bracketed placeholders; verify the official GitHub URL and repository visibility; confirm author identity and institutional details; provide required contribution, integrity, funding, acknowledgement, competing-interest, and AI-use statements; add any encoding literature required by the instructor; and confirm whether the CAS class is mandatory. Confirm that the final report and source are committed/published before claiming public availability. The repository does not contain evidence to fill these fields.
 \end{document}

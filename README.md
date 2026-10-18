@@ -242,8 +242,11 @@ multiple runs, the last run is selected by default; pass `--run-id ID` to select
 another. The plotting command writes `results/figures/` (PDF and PNG) and
 `results/tables/` (CSV and LaTeX). It does not modify the raw CSV, and no result
 is hard-coded in the script. The tracked figures and tables are stored in
-`results/`. No `report/` source directory or root `main.pdf` is present in this
-checkout, so a compiled report is not currently available here.
+`results/`. The editable LaTeX source is `report/main.tex`; the PDF companion is
+`main.pdf` at the repository root. In this environment the LaTeX compiler could
+not download its package bundle, so the PDF was rendered by
+`report/build_pdf.py` instead. Copies of report figures are kept under
+`report/figures/`; canonical benchmark artifacts remain under `results/`.
 
 ## Large-grid SAT pilot
 
@@ -313,15 +316,19 @@ src/
   baselines/                 # CP-SAT, Gurobi, CPLEX MIP, CPLEX CP, CBC
   tests/                     # pytest suite
 data/puzzles/                # example puzzle
+report/                      # editable report source, renderer and figure copies
+main.pdf                     # report PDF companion
 results/                     # results.csv, meta.json, instances/, figures/, tables/
-  # No report source directory or root main.pdf is present in this checkout.
 ```
 
 ## Data Availability
 
 Source code, sample input, the tracked raw benchmark CSV
 (`results/results.csv`, schema v1), puzzle instances, environment metadata,
-and generated figures and tables are present in this checkout. The metadata
+generated figures and tables, `report/main.tex`, and root `main.pdf` are present
+in this checkout. The PDF is a ReportLab-rendered companion because the local
+TeX compiler could not fetch its package bundle; `report/build_pdf.py` records
+that fallback rendering path. The metadata
 also contains a later schema-v3 invocation, but its associated
 `results/results.v3.csv` currently exists only as an untracked local file; it
 will not be part of the repository until added and published. The root
