@@ -1,9 +1,32 @@
 # Sudoku SAT Solver
 
-Run the example from the repository root:
+## Install and run
+
+Python 3 is required. Install the SAT solver dependency and the CP-SAT package
+used by the baseline and benchmark:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+The command-line solver requires PySAT. `ortools` is needed for the CP-SAT
+baseline and paired benchmark. To run the correctness tests, install `pytest`
+as a development dependency (`python3 -m pip install pytest`).
+
+From the repository root, solve the included example:
 
 ```bash
 python3 main.py data/puzzles/example_9x9.suk --box 3
+```
+
+The command prints encoding statistics followed by the solved grid, or
+`UNSATISFIABLE` for an inconsistent puzzle. A missing puzzle path is reported
+as a CLI error. `python3 main.py --help` shows the supported CLI options.
+
+Run the project correctness tests with:
+
+```bash
+python3 -m pytest src/tests
 ```
 
 Puzzle files contain exactly `N²` non-whitespace cells in row-major order,
@@ -40,3 +63,19 @@ an existing CSV or paired-instance directory causes the run to stop rather
 than overwrite raw data. `python_peak_mb` tracks Python allocations;
 `rss_high_water_mb` is the process high-water RSS and can include earlier
 configurations in the same run.
+
+Regenerate the saved benchmark summary and chart without running solvers:
+
+```bash
+python3 src/analyze_benchmark.py
+```
+
+The generated Markdown report and summary CSV/SVG chart are written to
+`results/reports/`. The script reads the existing pilot/full CSVs and does not
+change them.
+
+## Data Availability
+
+Source code, sample input, raw benchmark CSVs, paired puzzle instances, and
+generated benchmark summaries are available in the project repository:
+https://github.com/canknotcaw/sudoku_sat_solver

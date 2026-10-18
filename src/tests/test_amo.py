@@ -6,7 +6,7 @@ For each encoding and group size n we check, with a SAT solver:
 Together these say the CNF accepts exactly the "at most one" assignments,
 because any assignment with two or more true literals contains a violated pair.
 
-Run:  python -m tests.test_amo      (also collected by pytest)
+Run:  python3 -m pytest src/tests/test_amo.py
 """
 from functools import partial
 from itertools import combinations

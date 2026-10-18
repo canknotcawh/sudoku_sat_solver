@@ -4,8 +4,7 @@ import math
 from typing import Callable, List
 
 Clause = List[int]
-Literals = List[int]
-Lits = Literals
+Lits = List[int]
 
 def amo_pairwise(lits: Lits, new_var: Callable[[], int] = None) -> List[Clause]:
     """O(n^2) clauses, no auxiliary variables. Simple and fine for small groups (n=9)."""
@@ -117,10 +116,40 @@ def amo_product(lits: Lits, new_var: Callable[[], int], threshold: int = 6) -> L
     return clauses
 
 
+def _pysat_amo(enc_type_name: str):
+    """Build an AMO encoder that calls PySAT's own CardEnc.atmost(bound=1).
+ 
+    PySAT numbers its auxiliary variables from `top_id + 1`. To keep them from
+    colliding with ours, a fresh id `t` is taken from `new_var`, PySAT is told
+    the top is `t - 1`, and `new_var` is advanced until every id PySAT used has
+    been handed out. Groups that need no auxiliary variable are not used here.
+    """
+    from pysat.card import CardEnc, EncType
+ 
+    enc_type = getattr(EncType, enc_type_name)
+ 
+    def encoder(lits: Lits, new_var: Callable[[], int]) -> List[Clause]:
+        if len(lits) <= 1:
+            return []
+        t = new_var()
+        clauses = CardEnc.atmost(lits=list(lits), bound=1, top_id=t - 1, encoding=enc_type).clauses
+        highest = max(abs(l) for cl in clauses for l in cl)
+        while t < highest:
+            t = new_var()
+        return [list(cl) for cl in clauses]
+ 
+    return encoder
+ 
+ 
 AMO_ENCODERS = {
     "pairwise": amo_pairwise,
     "sequential": amo_sequential,
     "commander": amo_commander,
     "binary": amo_binary,
     "product": amo_product,
+    # The same families as built by the PySAT library itself, for comparison
+    # with the hand-written versions above.
+    "pysat_seqcounter": _pysat_amo("seqcounter"),
+    "pysat_bitwise": _pysat_amo("bitwise"),
+    "pysat_ladder": _pysat_amo("ladder"),
 }

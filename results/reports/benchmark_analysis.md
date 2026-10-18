@@ -82,3 +82,7 @@ No SAT-vs-CP-SAT runtime conclusion can be drawn because neither backend ran. Li
 - `benchmark_summary.csv`: per dataset, grid size, backend, AMO, and solver; missing measurements stay blank.
 - `full_encoding_time.svg`: full-run SAT encoding-time chart.
 - `benchmark_analysis.md`: this report.
+
+## Data Availability
+
+Source code, sample input, raw benchmark CSVs, paired puzzle instances, and generated summaries are available at https://github.com/canknotcaw/sudoku_sat_solver.

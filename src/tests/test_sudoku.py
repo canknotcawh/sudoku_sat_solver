@@ -1,6 +1,6 @@
 """End-to-end tests: every AMO encoding must solve Sudoku to a valid grid.
 
-Run:  python -m tests.test_sudoku      (also collected by pytest)
+Run:  python3 -m pytest src/tests/test_sudoku.py
 """
 from src.encodings.amo import AMO_ENCODERS
 from src.puzzle_io import generate_solved_grid, parse_string, puncture

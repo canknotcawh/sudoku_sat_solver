@@ -288,7 +288,9 @@ def main():
                "## Generated artifacts", "",
                "- `benchmark_summary.csv`: per dataset, grid size, backend, AMO, and solver; missing measurements stay blank.",
                "- `full_encoding_time.svg`: full-run SAT encoding-time chart.",
-               "- `benchmark_analysis.md`: this report.", ""]
+               "- `benchmark_analysis.md`: this report.", "",
+               "## Data Availability", "",
+               "Source code, sample input, raw benchmark CSVs, paired puzzle instances, and generated summaries are available at https://github.com/canknotcaw/sudoku_sat_solver.", ""]
     (args.output_dir / "benchmark_analysis.md").write_text("\n".join(report), encoding="utf-8")
     print(f"Wrote {args.output_dir / 'benchmark_summary.csv'} ({len(summary)} grouped rows)")
     print(f"Wrote {args.output_dir / 'full_encoding_time.svg'}")

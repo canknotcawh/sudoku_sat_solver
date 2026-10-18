@@ -1,10 +1,10 @@
 """CLI: solve a single Sudoku puzzle file with a chosen AMO encoding and SAT solver."""
 import argparse
 import time
+from pathlib import Path
 
 from src.encodings.amo import AMO_ENCODERS
 from src.puzzle_io import grid_to_string, parse_string
-from src.solver import solve, solve_check_unique
 from src.sudoku_encoder import SudokuEncoder
 
 
@@ -20,8 +20,10 @@ def main():
                           "clause and re-solves; prints a second solution if one is found)")
     args = ap.parse_args()
 
-    with open(args.puzzle_file) as f:
-        text = f.read()
+    try:
+        text = Path(args.puzzle_file).read_text(encoding="utf-8")
+    except OSError as exc:
+        ap.error(f"cannot read puzzle file {args.puzzle_file!r}: {exc.strerror or exc}")
     t0 = time.time()
     try:
         givens = parse_string(text, box_size=args.box)
@@ -31,8 +33,15 @@ def main():
         ap.error(str(exc))
     t_encode = time.time() - t0
 
+    try:
+        from src.solver import solve, solve_check_unique
+    except ModuleNotFoundError as exc:
+        if exc.name == "pysat":
+            ap.error("PySAT is not installed; install project dependencies with `python3 -m pip install -r requirements.txt`")
+        raise
+
     print(f"# amo={args.amo} solver={args.solver} vars={n_vars} clauses={len(clauses)} "
-          f"encode={t_encode:.3f}s", end=" ")
+          f"encode={t_encode:.3f}s")
 
     if not args.check_unique:
         t0 = time.time()
