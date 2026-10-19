@@ -15,13 +15,10 @@ python3 -m venv .venv && source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
-`requirements.txt` holds the core dependencies: PySAT (the command-line solver
-and the SAT benchmarks), `ortools` (CP-SAT baseline), `pytest`, `matplotlib`
-and `pandas` (plots). Optional baselines are installed separately:
-
-```bash
-python3 -m pip install -r requirements-extra.txt   # gurobipy, cplex, docplex, pulp (CBC)
-```
+`requirements.txt` lists the core dependencies (PySAT, OR-Tools, pytest,
+matplotlib and pandas) and optional baseline packages (Gurobi, CPLEX and PuLP).
+The optional baseline packages are installed by pip too; solver-specific
+licence limits still apply at runtime.
 
 **Free-edition limits.** The pip editions of Gurobi and CPLEX are free but
 limit the model size, so larger grids exceed what they accept. The benchmark
@@ -242,11 +239,10 @@ multiple runs, the last run is selected by default; pass `--run-id ID` to select
 another. The plotting command writes `results/figures/` (PDF and PNG) and
 `results/tables/` (CSV and LaTeX). It does not modify the raw CSV, and no result
 is hard-coded in the script. The tracked figures and tables are stored in
-`results/`. The editable LaTeX source is `report/main.tex`; the PDF companion is
-`main.pdf` at the repository root. In this environment the LaTeX compiler could
-not download its package bundle, so the PDF was rendered by
-`report/build_pdf.py` instead. Copies of report figures are kept under
-`report/figures/`; canonical benchmark artifacts remain under `results/`.
+`results/`. The current report PDF is `BTL1_report_DangCongAnh.pdf` at the
+repository root. Report figure copies are kept under `report/figures/`; the
+editable report source is not present in this checkout. Canonical benchmark
+artifacts remain under `results/`.
 
 ## Large-grid SAT pilot
 
@@ -316,8 +312,8 @@ src/
   baselines/                 # CP-SAT, Gurobi, CPLEX MIP, CPLEX CP, CBC
   tests/                     # pytest suite
 data/puzzles/                # example puzzle
-report/                      # editable report source, renderer and figure copies
-main.pdf                     # report PDF companion
+report/figures/              # copies of figures used in the report
+BTL1_report_DangCongAnh.pdf  # report PDF
 results/                     # results.csv, meta.json, instances/, figures/, tables/
 ```
 
@@ -325,17 +321,13 @@ results/                     # results.csv, meta.json, instances/, figures/, tab
 
 Source code, sample input, the tracked raw benchmark CSV
 (`results/results.csv`, schema v1), puzzle instances, environment metadata,
-generated figures and tables, `report/main.tex`, and root `main.pdf` are present
-in this checkout. The PDF is a ReportLab-rendered companion because the local
-TeX compiler could not fetch its package bundle; `report/build_pdf.py` records
-that fallback rendering path. The metadata
-also contains a later schema-v3 invocation, but its associated
-`results/results.v3.csv` currently exists only as an untracked local file; it
-will not be part of the repository until added and published. The root
-`results.zip` contains a snapshot of plots/tables, not a report PDF. The scripts
-to regenerate plots and tables are included. The repository URL below is left
-unchanged because the configured `origin` URL differs and its official
-ownership could not be independently verified; please confirm which URL should
-be published.
+generated figures and tables, and `BTL1_report_DangCongAnh.pdf` are present in
+this checkout. The editable report source is not included in the current
+checkout. The metadata also contains a later schema-v3 invocation, and
+`results/results.v3.csv` is currently an untracked local file; it will not be
+part of the repository until added and published. The scripts to regenerate
+plots and tables are included. The repository URL below matches the configured
+Git `origin` and the URL supplied by the author; public reachability was not
+confirmed during this review.
 
-https://github.com/canknotcaw/sudoku_sat_solver
+[https://github.com/canknotcawh/sudoku_sat_solver](https://github.com/canknotcawh/sudoku_sat_solver)
